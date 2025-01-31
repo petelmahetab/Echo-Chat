@@ -5,6 +5,9 @@ import cookieParser from "cookie-parser";
 import authRoutes from './routes/authRoutes.js'; 
 import connectToMongoDB from "./db/dbConnection.js";
 import bodyParser from "body-parser"; 
+import messageRoutes from './routes/messageRoutes.js';
+import usersRoutes from './routes/usersRoutes.js';
+
 
 const app = express();
 
@@ -17,7 +20,7 @@ app.use(bodyParser.json());
 
 // OR directly using Express (built-in since v4.16.0)
 app.use(express.json());
-
+app.use(cookieParser())
 // Middleware to parse URL-encoded data
 app.use(express.urlencoded({ extended: true }));
 
@@ -29,6 +32,8 @@ app.use((req, res, next) => {
 });
  
 app.use('/api/auth', authRoutes);
+app.use('/api/message',messageRoutes);
+app.use('/api/users',usersRoutes);
 
 app.listen(PORT, () => {
   connectToMongoDB();
