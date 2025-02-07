@@ -89,10 +89,3 @@ export const logOutUser = (req, res) => {
     res.status(500).json({ error: "Internal Server Error." });
   }
 };
-/*
-Ali token -
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3YTY3MDY3ZmE3MjlkOTNhZjE2NWI1MyIsImlhdCI6MTczODk2Mjg4NiwiZXhwIjoxNzQxOTg2ODg2fQ.L-QxNeUOFmoGw9Q4MrfYmccm31RbsRL1kAMITlXbf1k */
-
-
-//Shah token -
-//eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3YTY1ZTIxOTQxYTkyYThmOGQwOGM4MCIsImlhdCI6MTczODk2MzIxOCwiZXhwIjoxNzQxOTg3MjE4fQ.4iZEE5h3K1aGcDmksXb8XT27pd_PyO4AnbA_4tOy7LQ

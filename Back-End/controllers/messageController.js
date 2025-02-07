@@ -7,19 +7,21 @@ export const sendMessage = async (req, res) => {
     const { text } = req.body; // Extract text from request
     const { id: receiverId } = req.params; // Extract receiverId
     const senderId = req.user._id; // Extract senderId from authenticated user
-    let mediaUrl = null; // To store uploaded image/video URL
 
-    if (req.file) {
-      // Upload media (image or video) to Cloudinary
-      const uploadedMedia = await cloudinary.uploader.upload(req.file.path, {
-        folder: "chat_media",
-        resource_type: "auto", // Auto-detect image/video
-      });
+    let mediaUrls = []; // To store uploaded media URLs
 
-      mediaUrl = uploadedMedia.secure_url; // Store uploaded file URL
+    if (req.files && req.files.length > 0) {
+      // Upload multiple files to Cloudinary
+      for (let file of req.files) {
+        const uploadedMedia = await cloudinary.uploader.upload(file.path, {
+          folder: "chat_media",
+          resource_type: "auto", // Auto-detect image/video
+        });
+        mediaUrls.push(uploadedMedia.secure_url); // Store uploaded file URL
+      }
     }
 
-    if (!text && !mediaUrl) {
+    if (!text && mediaUrls.length === 0) {
       return res.status(400).json({ error: "Message must contain text or media." });
     }
 
@@ -35,12 +37,12 @@ export const sendMessage = async (req, res) => {
       });
     }
 
-    // Create a new message with text or media
+    // Create a new message with text and media URLs
     const newMessage = new Message({
       senderId,
       receiverId,
       text,
-      media: mediaUrl, // Store uploaded media URL
+      media: mediaUrls, // Store multiple media URLs
     });
 
     // Save message and update conversation
@@ -48,7 +50,7 @@ export const sendMessage = async (req, res) => {
     conversation.messages.push(newMessage._id);
     await conversation.save();
 
-    res.status(200).json({ messageId: newMessage._id, mediaUrl });
+    res.status(200).json({ messageId: newMessage._id, mediaUrls });
   } catch (error) {
     console.error("Error in sendMessage:", error);
     res.status(500).json({ error: "Internal Server Error" });
