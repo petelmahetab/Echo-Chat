@@ -22,7 +22,9 @@ app.use(bodyParser.json());
 app.use(express.json());
 app.use(cookieParser())
 // Middleware to parse URL-encoded data
+
 app.use(express.urlencoded({ extended: true }));
+
 
 const __dirname = path.resolve();
 const PORT = process.env.PORT || 5000;

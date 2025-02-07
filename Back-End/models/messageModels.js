@@ -2,27 +2,13 @@ import mongoose from "mongoose";
 
 const messageSchema = new mongoose.Schema(
   {
-    senderId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User", // Reference to the User model
-      required: true,
-    },
-    receiverId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User", // Reference to the User model
-      required: true,
-    },
-    message: {
-      type: String,
-      required: true,
-    },
-    deletedAt: {
-      type: Date,
-      default: null, // Initially null, will be set when the message is deleted
-    },
+    senderId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    receiverId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    text: { type: String }, // Optional text message
+    media: { type: String }, // Cloudinary URL for image or video
+    mediaType: { type: String, enum: ["image", "video", "auto"], default: "auto" }, // Stores type
   },
-  { timestamps: true } // Automatically adds `createdAt` and `updatedAt` fields
+  { timestamps: true }
 );
 
-const Message = mongoose.model("Message", messageSchema);
-export default Message;
+export default mongoose.model("Message", messageSchema);

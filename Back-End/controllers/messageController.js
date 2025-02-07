@@ -1,66 +1,74 @@
 import Conversation from "../models/conversationModel.js";
 import Message from "../models/messageModels.js";
+import cloudinary from "../utils/cloudinaryConfig.js"; // Import Cloudinary config
 
 export const sendMessage = async (req, res) => {
   try {
-    const { message } = req.body; // Extract the message content from the request body
-    const { id: receiverId } = req.params; // Extract the receiverId from the request params
-    const senderId = req.user._id; // Extract the senderId from the authenticated user
+    const { text } = req.body; // Extract text from request
+    const { id: receiverId } = req.params; // Extract receiverId
+    const senderId = req.user._id; // Extract senderId from authenticated user
+    let mediaUrl = null; // To store uploaded image/video URL
 
-    // Find or create a conversation between the sender and receiver
+    if (req.file) {
+      // Upload media (image or video) to Cloudinary
+      const uploadedMedia = await cloudinary.uploader.upload(req.file.path, {
+        folder: "chat_media",
+        resource_type: "auto", // Auto-detect image/video
+      });
+
+      mediaUrl = uploadedMedia.secure_url; // Store uploaded file URL
+    }
+
+    if (!text && !mediaUrl) {
+      return res.status(400).json({ error: "Message must contain text or media." });
+    }
+
+    // Find or create a conversation between sender and receiver
     let conversation = await Conversation.findOne({
       participants: { $all: [senderId, receiverId] },
     });
 
-    // If no conversation exists, create a new one
     if (!conversation) {
       conversation = await Conversation.create({
         participants: [senderId, receiverId],
-        messages: [], // Initialize the messages array
+        messages: [],
       });
     }
 
-    // Create a new message
+    // Create a new message with text or media
     const newMessage = new Message({
       senderId,
       receiverId,
-      message, // The message content (title)
+      text,
+      media: mediaUrl, // Store uploaded media URL
     });
 
-    // Save the new message to the database
+    // Save message and update conversation
     await newMessage.save();
-
-    // Push the new message's ID to the conversation's messages array
     conversation.messages.push(newMessage._id);
-
-    // Save the updated conversation
     await conversation.save();
 
-    // Send a success response with the new message's ID
-    res.status(200).json({ messageId: newMessage._id });
-
+    res.status(200).json({ messageId: newMessage._id, mediaUrl });
   } catch (error) {
-    console.log("Error Occurred at server Side:", error);
+    console.error("Error in sendMessage:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
 
-export const getMessage=async(req,res)=>{
+export const getMessage = async (req, res) => {
   try {
-    const {id:userToChatId}=req.params;
-    const senderId=req.user._id;
+    const { id: userToChatId } = req.params;
+    const senderId = req.user._id;
 
-    const conversation=await Conversation.findOne({
-      participants:{$all:[senderId,userToChatId]},
-    }).populate('messages');
+    const conversation = await Conversation.findOne({
+      participants: { $all: [senderId, userToChatId] },
+    }).populate("messages");
 
+    if (!conversation) return res.status(200).json([]);
 
-    if(!conversation) return res.status(200).json([])
-const message=conversation.messages;
-    res.status(200).json(message)
-
+    res.status(200).json(conversation.messages);
   } catch (error) {
-    console.log("Error Occured at server Side")
-    res.status(500).json({err:"Internal Server Error"})
+    console.error("Error occurred in getMessage:", error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
-}
+};
