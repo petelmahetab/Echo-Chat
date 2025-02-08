@@ -89,3 +89,8 @@ export const logOutUser = (req, res) => {
     res.status(500).json({ error: "Internal Server Error." });
   }
 };
+
+
+export const check=(req,res)=>{
+  
+}

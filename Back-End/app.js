@@ -7,7 +7,7 @@ import connectToMongoDB from "./db/dbConnection.js";
 import bodyParser from "body-parser"; 
 import messageRoutes from './routes/messageRoutes.js';
 import usersRoutes from './routes/usersRoutes.js';
-
+import cors from 'cors';
 
 const app = express();
 
@@ -21,6 +21,11 @@ app.use(bodyParser.json());
 // OR directly using Express (built-in since v4.16.0)
 app.use(express.json());
 app.use(cookieParser())
+
+app.use(cors({
+  origin: "http://localhost:5173",  // Your React app's origin
+  credentials: true                 // Allow cookies to be sent
+}));
 // Middleware to parse URL-encoded data
 
 app.use(express.urlencoded({ extended: true }));
