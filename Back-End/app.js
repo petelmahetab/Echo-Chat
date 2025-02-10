@@ -21,10 +21,15 @@ app.use(bodyParser.json());
 // OR directly using Express (built-in since v4.16.0)
 app.use(express.json());
 app.use(cookieParser())
+app.use((req, res, next) => {
+  res.setHeader("Content-Type", "application/json"); // Ensures JSON responses
+  next();
+});
+
 
 app.use(cors({
-  origin: "http://localhost:5173",  // Your React app's origin
-  credentials: true                 // Allow cookies to be sent
+  origin: "http://localhost:5173",  
+  credentials: true,             
 }));
 // Middleware to parse URL-encoded data
 

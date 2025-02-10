@@ -8,10 +8,15 @@ router.post('/signup',signUp)
 router.get('/login',loginUser)
 router.get('/logout',logOutUser)
 
-router.get("/check", protectRoute, (req, res) => {
-    // If protectRoute passes, req.user will be available
-    res.json({ authenticated: true, user: req.user });
+router.get("/check", (req, res) => {
+  const token = req.headers.authorization?.split(" ")[1];
+  if (!token) return res.status(401).json({ message: "Unauthorized" });
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    if (err) return res.status(401).json({ message: "Invalid token" });
+    res.json(user);
   });
+});
   
 
 export default router;

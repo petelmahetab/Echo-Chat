@@ -27,7 +27,7 @@ export const signUp = async (req, res) => {
     // Create new user
     const newUser = new User({
       email,
-      userName,  // Changed from fullName to userName
+      userName,  
       password: hashedPass,
       profilePic
     });
@@ -39,7 +39,7 @@ export const signUp = async (req, res) => {
 
     res.status(201).json({
       _id: newUser._id,
-      userName: newUser.userName,  // Changed from fullName to userName
+      userName: newUser.userName,  
       email: newUser.email,
       profilePic: newUser.profilePic
     });
