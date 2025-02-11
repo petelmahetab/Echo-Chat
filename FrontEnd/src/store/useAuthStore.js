@@ -3,8 +3,8 @@ import { axiosInstance } from "../lib/axios.js";
 import toast from "react-hot-toast";
 import { io } from "socket.io-client";
 
-const BASE_URL = import.meta.env.MODE === "development" 
-  ? "http://localhost:5000" 
+const BASE_URL = import.meta.env.MODE === "development"
+  ? "http://localhost:5000"
   : "/";
 
 export const useAuthStore = create((set, get) => ({
@@ -18,7 +18,18 @@ export const useAuthStore = create((set, get) => ({
 
   checkAuth: async () => {
     try {
-      const res = await axiosInstance.get("/auth/check");
+      const token = localStorage.getItem("authToken");
+      if (!token) {
+        // Optionally handle the case when there's no token.
+        set({ authUser: null, isCheckingAuth: false });
+        return;
+      }
+      
+      const res = await axiosInstance.get("/auth/check", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       set({ authUser: res.data });
       get().connectSocket();
     } catch (error) {
@@ -29,13 +40,14 @@ export const useAuthStore = create((set, get) => ({
       set({ isCheckingAuth: false });
     }
   },
+  
 
   signup: async (data) => {
     set({ isSigningUp: true });
     try {
       const res = await axiosInstance.post("/auth/signup", data);
       set({ authUser: res.data });
-      toast.success("Account created successfully");
+      toast.success("✅ Logged out successfully");
       get().connectSocket();
     } catch (error) {
       toast.error(error.response.data.message);
@@ -46,29 +58,65 @@ export const useAuthStore = create((set, get) => ({
 
   login: async (data) => {
     set({ isLoggingIn: true });
+
     try {
-      const res = await axiosInstance.post("/auth/login", data);
+      const res = await axiosInstance.post("/auth/login", {
+        ...data,
+        email: data.email.toLowerCase().trim()
+      });
+
+      // Store token in localStorage
       localStorage.setItem("authToken", res.data.token);
-      set({ authUser: res.data });
-      toast.success("Logged in successfully");
+
+      // Log response for debugging
+      console.log(res);
+
+      // Set user data in store
+      set({
+        authUser: res.data,
+        isAuthenticated: true
+      });
+
+      toast.success("✅ Logged in successfully");
       get().connectSocket();
     } catch (error) {
-      toast.error(error.response?.data?.message || "Login failed");
+      if (error.response) {
+        // Show error toast only if backend sends an error
+        const errorMessage = error.response.data?.error || error.response.data?.message || "❌ Login failed";
+        toast.error(errorMessage);
+      } else {
+        // If there's no response (network error), show a generic message
+        toast.error("⚠️ Network error. Please try again.");
+      }
     } finally {
       set({ isLoggingIn: false });
     }
   },
 
+
+
   logout: async () => {
     try {
-      await axiosInstance.post("/auth/logout");
+      const res = await axiosInstance.post("/auth/logout");
+
+      if (res.status === 200) {
+        // Only show toast if logout is successful
+        toast.success("✅ Logged out successfully");
+      }
+
       set({ authUser: null });
-      toast.success("Logged out successfully");
       get().disconnectSocket();
-    } catch (error) {
-      toast.error(error.response.data.message);
+    }  catch (error) {
+      if (error.response) {
+        const errorMessage = error.response.data?.error || error.response.data?.message || "❌ Login failed";
+        toast.error(errorMessage);
+      } else {
+        toast.error("⚠️ Network error. Please try again.");
+      }
     }
+    
   },
+
 
   updateProfile: async (data) => {
     set({ isUpdatingProfile: true });

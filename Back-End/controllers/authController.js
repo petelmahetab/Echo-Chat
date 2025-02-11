@@ -11,6 +11,15 @@ export const signUp = async (req, res) => {
       return res.status(400).json({ error: "Passwords do not match" });
     }
 
+    // In signUp controller
+if (password.length < 6) {
+  return res.status(400).json({ error: "Password must be at least 6 characters" });
+}
+
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+if (!emailRegex.test(email)) {
+  return res.status(400).json({ error: "Invalid email format" });
+}
     // Check if the email is already registered
     const userExists = await User.findOne({ email });
     if (userExists) {
@@ -54,23 +63,34 @@ export const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
     
-    // Find user by email
-    const user = await User.findOne({ email });
+    // Normalize email to lowercase
+    const normalizedEmail = email.toLowerCase().trim();
+    
+    // Find user by email (case-insensitive)
+    const user = await User.findOne({ email: normalizedEmail });
+
+    // Check if user exists first
+   if (!user) {
+  return res.status(400).json({ error: "Invalid Email or Password." });
+}
+
 
     // Check if password is correct
-    const isPasswordCorrect = await bcrypt.compare(password, user?.password || "");
-   
-    if (!user || !isPasswordCorrect) {
+    const isPasswordCorrect = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordCorrect) {
       return res.status(400).json({ error: "Invalid Email or Password." });
     }
 
-    generateTokenANDSetCookie(user._id, res);
+    // Generate token and get it for response
+    const token = generateTokenANDSetCookie(user._id, res);
 
     res.status(200).json({
       _id: user._id,
-      userName: user.userName,  // Changed from fullName to userName
+      userName: user.userName,
       email: user.email,
-      profilePic: user.profilePic
+      profilePic: user.profilePic,
+      token: token // Send token in response body
     });
 
   } catch (err) {
@@ -91,6 +111,3 @@ export const logOutUser = (req, res) => {
 };
 
 
-export const check=(req,res)=>{
-  
-}

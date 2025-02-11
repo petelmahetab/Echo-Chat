@@ -8,6 +8,8 @@ import bodyParser from "body-parser";
 import messageRoutes from './routes/messageRoutes.js';
 import usersRoutes from './routes/usersRoutes.js';
 import cors from 'cors';
+import { createServer } from "http";
+import { Server } from "socket.io";
 
 const app = express();
 
@@ -26,6 +28,19 @@ app.use((req, res, next) => {
   next();
 });
 
+
+
+const http=createServer(app);
+
+const io=new Server(http,{
+  cors: {
+    origin: "http://localhost:5173", 
+    methods: ["GET", "POST"],
+    credentials:true,
+  },
+  path: "/socket.io/" // Explicit path (this is default)
+
+});
 
 app.use(cors({
   origin: "http://localhost:5173",  
@@ -46,6 +61,7 @@ app.use((req, res, next) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/message',messageRoutes);
 app.use('/api/users',usersRoutes);
+
 
 app.listen(PORT, () => {
   connectToMongoDB();
