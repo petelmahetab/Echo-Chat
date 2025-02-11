@@ -1,11 +1,13 @@
 import express from 'express'
 import { loginUser, logOutUser, signUp } from '../controllers/authController.js';
 import protectRoute from '../middlewares/protectRoute.js'
+import upload from '../middlewares/multer.js';
+import { updateUserProfile } from '../controllers/authController.js';
 
-const router=express.Router()
+const router = express.Router()
 
-router.post('/signup',signUp)
-router.post('/login',loginUser)
+router.post('/signup', signUp)
+router.post('/login', loginUser)
 router.post("/logout", logOutUser);
 
 router.get("/check", (req, res) => {
@@ -16,6 +18,13 @@ router.get("/check", (req, res) => {
     res.json(user);
   });
 });
-  
+
+router.put(
+  '/update-profile',
+  protectRoute,
+  upload.single('profilePic'),
+  updateUserProfile
+);
+
 
 export default router;

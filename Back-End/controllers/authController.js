@@ -111,3 +111,46 @@ export const logOutUser = (req, res) => {
 };
 
 
+export const updateUserProfile = async (req, res) => {
+  try {
+    const { userId } = req.user; 
+    const { username, email } = req.body;
+    
+    if (!username || !email) {
+      return res.status(400).json({ message: "Username and email are required" });
+    }
+
+    // Check if email is valid
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ message: "Invalid email format" });
+    }
+
+    // Find user and update
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { 
+        userName: username,
+        email: email.toLowerCase().trim(),
+        ...(req.file && { profilePic: req.file.path }) 
+      },
+      { new: true, select: '-password' } // Return updated user without password
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json(updatedUser);
+    
+  } catch (error) {
+    console.error("Update profile error:", error);
+    
+    // Handle duplicate email error
+    if (error.code === 11000) {
+      return res.status(400).json({ message: "Email already exists" });
+    }
+    
+    res.status(500).json({ message: "Server error updating profile" });
+  }
+};
