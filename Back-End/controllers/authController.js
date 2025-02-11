@@ -1,6 +1,7 @@
 import User from "../models/userModels.js";
 import bcrypt from "bcryptjs";
 import generateTokenANDSetCookie from "../utils/generateToken.js";
+import { v2 as cloudinary } from 'cloudinary';
 
 export const signUp = async (req, res) => {
   try {
@@ -113,28 +114,35 @@ export const logOutUser = (req, res) => {
 
 export const updateUserProfile = async (req, res) => {
   try {
-    const { userId } = req.user; 
-    const { username, email } = req.body;
-    
+    const { userId } = req.user;
+    const { username, email, profilePic } = req.body;
+
+    // Validation
     if (!username || !email) {
       return res.status(400).json({ message: "Username and email are required" });
     }
 
-    // Check if email is valid
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       return res.status(400).json({ message: "Invalid email format" });
     }
 
-    // Find user and update
+    // Handle profile picture
+    let profilePicUrl = profilePic;
+    if (profilePic?.startsWith('data:image')) {
+      // Handle base64 image upload
+      const result = await uploadBase64Image(profilePic);
+      profilePicUrl = result.secure_url; // Example using Cloudinary
+    }
+
     const updatedUser = await User.findByIdAndUpdate(
       userId,
-      { 
+      {
         userName: username,
         email: email.toLowerCase().trim(),
-        ...(req.file && { profilePic: req.file.path }) 
+        profilePic: profilePicUrl
       },
-      { new: true, select: '-password' } // Return updated user without password
+      { new: true, select: '-password' }
     );
 
     if (!updatedUser) {
@@ -142,15 +150,32 @@ export const updateUserProfile = async (req, res) => {
     }
 
     res.status(200).json(updatedUser);
-    
+
   } catch (error) {
     console.error("Update profile error:", error);
-    
-    // Handle duplicate email error
     if (error.code === 11000) {
       return res.status(400).json({ message: "Email already exists" });
     }
-    
     res.status(500).json({ message: "Server error updating profile" });
+  }
+};
+
+cloudinary.config({ 
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+const uploadBase64Image = async (base64String) => {
+  try {
+    const result = await cloudinary.uploader.upload(base64String, {
+      folder: 'profile-pictures',
+      format: 'webp',
+      quality: 'auto:best'
+    });
+    return result;
+  } catch (error) {
+    console.error('Cloudinary upload error:', error);
+    throw new Error('Image upload failed');
   }
 };

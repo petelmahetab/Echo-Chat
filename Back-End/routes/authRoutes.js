@@ -3,6 +3,7 @@ import { loginUser, logOutUser, signUp } from '../controllers/authController.js'
 import protectRoute from '../middlewares/protectRoute.js'
 import upload from '../middlewares/multer.js';
 import { updateUserProfile } from '../controllers/authController.js';
+import jwt from 'jsonwebtoken';  // Instead of named import
 
 const router = express.Router()
 

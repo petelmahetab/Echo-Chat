@@ -1,43 +1,65 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuthStore } from "../store/useAuthStore";
-import { Camera, Mail, User } from "lucide-react";
+import { Camera, Mail, User, Save } from "lucide-react";
 
 const ProfilePage = () => {
   const { authUser, isUpdatingProfile, updateProfile } = useAuthStore();
-  const [selectedImg, setSelectedImg] = useState(null);
+  const [formData, setFormData] = useState({
+    username: authUser?.userName || "",
+    email: authUser?.email || "",
+    profilePic: authUser?.profilePic || ""
+  });
 
-  const handleImageUpload = async (e) => {
+  // Keep formData in sync if authUser changes (e.g., after login)
+  useEffect(() => {
+    if (authUser) {
+      setFormData({
+        username: authUser.userName || "",
+        email: authUser.email || "",
+        profilePic: authUser.profilePic || ""
+      });
+    }
+  }, [authUser]);
+
+  // Handle image upload and update formData.profilePic with base64 data
+  const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
+    
     const reader = new FileReader();
-
-    reader.readAsDataURL(file);
-
-    reader.onload = async () => {
-      const base64Image = reader.result;
-      setSelectedImg(base64Image);
-      await updateProfile({ profilePic: base64Image });
+    reader.onload = () => {
+      setFormData(prev => ({
+        ...prev,
+        profilePic: reader.result
+      }));
     };
+    reader.readAsDataURL(file);
+  };
+
+  // On submit, update the profile using the formData
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    await updateProfile(formData);
   };
 
   return (
     <div className="h-screen pt-20">
-      <div className="max-w-2xl mx-auto p-4 py-8">
+      <form onSubmit={handleSubmit} className="max-w-2xl mx-auto p-4 py-8">
         <div className="bg-base-300 rounded-xl p-6 space-y-8">
+          
+          {/* Header */}
           <div className="text-center">
-            <h1 className="text-2xl font-semibold ">Profile</h1>
+            <h1 className="text-2xl font-semibold">Profile</h1>
             <p className="mt-2">Your profile information</p>
           </div>
 
-          {/* avatar upload section */}
-
+          {/* Profile Picture Upload */}
           <div className="flex flex-col items-center gap-4">
             <div className="relative">
               <img
-                src={selectedImg || authUser.profilePic || "/avatar.png"}
+                src={formData.profilePic || "/avatar.png"}
                 alt="Profile"
-                className="size-32 rounded-full object-cover border-4 "
+                className="w-32 h-32 rounded-full object-cover border-4"
               />
               <label
                 htmlFor="avatar-upload"
@@ -65,40 +87,70 @@ const ProfilePage = () => {
             </p>
           </div>
 
+          {/* Editable Fields */}
           <div className="space-y-6">
             <div className="space-y-1.5">
-              <div className="text-sm text-zinc-400 flex items-center gap-2">
+              <label className="text-sm text-zinc-400 flex items-center gap-2">
                 <User className="w-4 h-4" />
-                Full Name
-              </div>
-              <p className="px-4 py-2.5 bg-base-200 rounded-lg border">{authUser?.userName}</p>
+                Username
+              </label>
+              <input
+                type="text"
+                value={formData.username}
+                onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
+                className="input input-bordered w-full"
+              />
             </div>
 
             <div className="space-y-1.5">
-              <div className="text-sm text-zinc-400 flex items-center gap-2">
+              <label className="text-sm text-zinc-400 flex items-center gap-2">
                 <Mail className="w-4 h-4" />
-                Email Address
-              </div>
-              <p className="px-4 py-2.5 bg-base-200 rounded-lg border">{authUser?.email}</p>
+                Email
+              </label>
+              <input
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                className="input input-bordered w-full"
+              />
             </div>
           </div>
 
-          <div className="mt-6 bg-base-300 rounded-xl p-6">
-            <h2 className="text-lg font-medium  mb-4">Account Information</h2>
-            <div className="space-y-3 text-sm">
-              <div className="flex items-center justify-between py-2 border-b border-zinc-700">
-                <span>Member Since</span>
-                <span>{authUser.createdAt?.split("T")[0]}</span>
-              </div>
-              <div className="flex items-center justify-between py-2">
-                <span>Account Status</span>
-                <span className="text-green-500">Active</span>
+          {/* Update Button */}
+          <button
+            type="submit"
+            disabled={isUpdatingProfile}
+            className="btn btn-primary w-full gap-2"
+          >
+            {isUpdatingProfile ? (
+              <span className="loading loading-spinner"></span>
+            ) : (
+              <Save className="w-5 h-5" />
+            )}
+            Update Profile
+          </button>
+
+          {/* Account Information */}
+          {authUser && (
+            <div className="mt-6 bg-base-300 rounded-xl p-6">
+              <h2 className="text-lg font-medium mb-4">Account Information</h2>
+              <div className="space-y-3 text-sm">
+                <div className="flex items-center justify-between py-2 border-b border-zinc-700">
+                  <span>Member Since</span>
+                  <span>{authUser.createdAt ? authUser.createdAt.split("T")[0] : ""}</span>
+                </div>
+                <div className="flex items-center justify-between py-2">
+                  <span>Account Status</span>
+                  <span className="text-green-500">Active</span>
+                </div>
               </div>
             </div>
-          </div>
+          )}
+
         </div>
-      </div>
+      </form>
     </div>
   );
 };
+
 export default ProfilePage;
