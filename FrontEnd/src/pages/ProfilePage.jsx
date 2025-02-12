@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuthStore } from "../store/useAuthStore";
-import { Camera, Mail, User, Save } from "lucide-react";
+import { Camera, Mail, User, Save,ChevronLeft } from "lucide-react";
+import { Link } from "react-router-dom"; // Add this import
 
 const ProfilePage = () => {
   const { authUser, isUpdatingProfile, updateProfile } = useAuthStore();
@@ -130,6 +131,11 @@ const ProfilePage = () => {
             Update Profile
           </button>
 
+          <Link to="/" className="btn btn-ghost w-full gap-2">
+              <ChevronLeft className="w-5 h-5" />
+              Back to Home
+            </Link>
+
           {/* Account Information */}
           {authUser && (
             <div className="mt-6 bg-base-300 rounded-xl p-6">
@@ -149,6 +155,42 @@ const ProfilePage = () => {
 
         </div>
       </form>
+      <footer className="mt-10 bg-base-300 rounded-xl p-6 text-center space-y-4">
+  <h2 className="text-lg font-medium">Stay Connected</h2>
+  
+  {/* Social Media Icons */}
+  <div className="flex justify-center space-x-4">
+    <a href="#" className="text-base-content hover:text-blue-500 transition-all duration-200">
+      <i className="fab fa-facebook-f"></i>
+    </a>
+    <a href="#" className="text-base-content hover:text-blue-400 transition-all duration-200">
+      <i className="fab fa-twitter"></i>
+    </a>
+    <a href="#" className="text-base-content hover:text-pink-500 transition-all duration-200">
+      <i className="fab fa-instagram"></i>
+    </a>
+    <a href="#" className="text-base-content hover:text-blue-600 transition-all duration-200">
+      <i className="fab fa-linkedin-in"></i>
+    </a>
+  </div>
+
+  {/* Quick Navigation Links */}
+  <div className="space-x-4 text-sm">
+    <Link to="/" className="hover:text-primary transition-all duration-200">Home</Link>
+    <Link to="/settings" className="hover:text-primary transition-all duration-200">Settings</Link>
+    <Link to="/help" className="hover:text-primary transition-all duration-200">Help</Link>
+  </div>
+
+  {/* Contact Information */}
+  <p className="text-sm text-zinc-400">
+    Contact us: <a href="mailto:support@example.com" className="hover:underline">support@example.com</a>
+  </p>
+
+  {/* Copyright Notice */}
+  <p className="text-xs text-zinc-500">
+    © {new Date().getFullYear()} Your Company. All rights reserved.
+  </p>
+</footer>
     </div>
   );
 };

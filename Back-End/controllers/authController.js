@@ -114,49 +114,80 @@ export const logOutUser = (req, res) => {
 
 export const updateUserProfile = async (req, res) => {
   try {
-    const { userId } = req.user;
+    const userId = req.user._id;
     const { username, email, profilePic } = req.body;
 
-    // Validation
+    // Validation checks
     if (!username || !email) {
-      return res.status(400).json({ message: "Username and email are required" });
+      return res.status(400).json({ message: 'Username and email are required' });
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return res.status(400).json({ message: "Invalid email format" });
+    // Check if user exists
+    const existingUser = await User.findById(userId);
+    if (!existingUser) {
+      return res.status(404).json({ message: 'User not found' });
     }
 
-    // Handle profile picture
-    let profilePicUrl = profilePic;
-    if (profilePic?.startsWith('data:image')) {
-      // Handle base64 image upload
-      const result = await uploadBase64Image(profilePic);
-      profilePicUrl = result.secure_url; // Example using Cloudinary
+    // Check for duplicate email
+    if (email !== existingUser.email) {
+      const emailExists = await User.findOne({ email });
+      if (emailExists) {
+        return res.status(409).json({ message: 'Email already in use' });
+      }
+    }
+
+    // Validate base64 image format if profilePic is provided
+    if (profilePic && !profilePic.startsWith('data:image')) {
+      return res.status(400).json({ message: 'Invalid image format. Please use base64 encoded image' });
     }
 
     const updatedUser = await User.findByIdAndUpdate(
       userId,
-      {
-        userName: username,
-        email: email.toLowerCase().trim(),
-        profilePic: profilePicUrl
+      { 
+        $set: { 
+          userName: username, 
+          email, 
+          ...(profilePic && { profilePic }) // Only update if provided
+        }
       },
-      { new: true, select: '-password' }
-    );
+      { 
+        new: true, 
+        runValidators: true,
+        context: 'query' // Needed for proper validation
+      }
+    ).select('-password');
 
     if (!updatedUser) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(404).json({ message: 'User not found' });
     }
 
     res.status(200).json(updatedUser);
 
   } catch (error) {
-    console.error("Update profile error:", error);
-    if (error.code === 11000) {
-      return res.status(400).json({ message: "Email already exists" });
+    console.error('Profile update error:', error);
+
+  
+    if (error.name === 'ValidationError') {
+      const messages = Object.values(error.errors).map(val => val.message);
+      return res.status(400).json({ message: messages.join(', ') });
     }
-    res.status(500).json({ message: "Server error updating profile" });
+
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyPattern)[0];
+      return res.status(409).json({ 
+        message: `${field === 'email' ? 'Email' : 'Username'} already exists`
+      });
+    }
+
+    // Handle invalid ID format
+    if (error.name === 'CastError') {
+      return res.status(400).json({ message: 'Invalid user ID format' });
+    }
+
+    // General server error
+    res.status(500).json({ 
+      message: error.message || 'Server error during profile update'
+    });
   }
 };
 
