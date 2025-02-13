@@ -18,10 +18,11 @@ const ChatContainer = () => {
   } = useChatStore();
   const { authUser } = useAuthStore();
   const messageEndRef = useRef(null);
+  
 
   useEffect(() => {
     getMessages(selectedUser._id);
-
+    console.log("Fetching messages for User ID:", selectedUser._id);
     subscribeToMessages();
 
     return () => unsubscribeFromMessages();

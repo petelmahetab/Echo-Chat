@@ -4,19 +4,19 @@ import cloudinary from "../utils/cloudinaryConfig.js"; // Import Cloudinary conf
 
 export const sendMessage = async (req, res) => {
   try {
-    const { text } = req.body; // Extract text from request
-    const { id: receiverId } = req.params; // Extract receiverId
-    const senderId = req.user._id; // Extract senderId from authenticated user
+    const { text } = req.body; 
+    const { id: receiverId } = req.params;
+    const senderId = req.user._id; 
 
-    let mediaUrls = []; // To store uploaded media URLs
+    let mediaUrls = []; 
 
     if (req.files && req.files.length > 0) {
-      // Upload multiple files to Cloudinary
+
       for (let file of req.files) {
         const uploadedMedia = await cloudinary.uploader.upload(file.path, {
           folder: "chat_media",
-          resource_type: "auto", // Auto-detect image/video
-        });
+          resource_type: "auto", 
+                });
         mediaUrls.push(uploadedMedia.secure_url); // Store uploaded file URL
       }
     }
@@ -38,12 +38,16 @@ export const sendMessage = async (req, res) => {
     }
 
     // Create a new message with text and media URLs
-    const newMessage = new Message({
+    const newMessage = await new Message({
       senderId,
       receiverId,
       text,
-      media: mediaUrls, // Store multiple media URLs
+      media: mediaUrls,
+    }).populate({
+      path: 'senderId',
+      select: 'userName profilePic'
     });
+    
 
     // Save message and update conversation
     await newMessage.save();
@@ -64,7 +68,13 @@ export const getMessage = async (req, res) => {
 
     const conversation = await Conversation.findOne({
       participants: { $all: [senderId, userToChatId] },
-    }).populate("messages");
+    }).populate({
+      path: 'messages',
+      populate: {
+        path: 'senderId',
+        select: 'fullName profilePic'
+      }
+    });    
 
     if (!conversation) return res.status(200).json([]);
 
