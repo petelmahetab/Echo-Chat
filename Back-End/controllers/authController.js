@@ -86,13 +86,15 @@ export const loginUser = async (req, res) => {
     // Generate token and get it for response
     const token = generateTokenANDSetCookie(user._id, res);
 
+    console.log(token)
     res.status(200).json({
       _id: user._id,
       userName: user.userName,
       email: user.email,
       profilePic: user.profilePic,
-      token: token // Send token in response body
+      token: token 
     });
+    
 
   } catch (err) {
     console.log("Error while logging in:", err.message);

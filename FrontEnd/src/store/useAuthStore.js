@@ -66,10 +66,10 @@ export const useAuthStore = create((set, get) => ({
       });
 
       // Store token in localStorage
-      localStorage.setItem("authToken", res.data.token);
+      //localStorage.setItem("authToken", res.data.token);
 
       // Log response for debugging
-      console.log(res);
+      console.log(res.data.token);
 
       // Set user data in store
       set({
@@ -78,7 +78,7 @@ export const useAuthStore = create((set, get) => ({
       });
 
       toast.success("✅ Logged in successfully");
-      get().connectSocket();
+    //  get().connectSocket();
     } catch (error) {
       if (error.response) {
         // Show error toast only if backend sends an error
@@ -105,7 +105,7 @@ export const useAuthStore = create((set, get) => ({
       }
 
       set({ authUser: null });
-      get().disconnectSocket();
+    //  get().disconnectSocket();
     }  catch (error) {
       if (error.response) {
         const errorMessage = error.response.data?.error || error.response.data?.message || "❌ Login failed";
