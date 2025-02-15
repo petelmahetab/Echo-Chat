@@ -18,21 +18,29 @@ const ChatContainer = () => {
   } = useChatStore();
   const { authUser } = useAuthStore();
   const messageEndRef = useRef(null);
-  
 
+  if (!selectedUser) return null;
+
+  // Single useEffect to handle both fetching messages and subscribing/unsubscribing
   useEffect(() => {
-    getMessages(selectedUser._id);
-    console.log("Fetching messages for User ID:", selectedUser._id);
-    subscribeToMessages();
+    if (!selectedUser?._id) return;
 
-    return () => unsubscribeFromMessages();
-  }, [selectedUser._id, getMessages, subscribeToMessages, unsubscribeFromMessages]);
+    const fetchMessagesAndSubscribe = async () => {
+      try {
+        await getMessages(selectedUser._id);  // Fetch messages
+        subscribeToMessages();  // Subscribe to new messages
+      } catch (error) {
+        console.error("Error fetching messages:", error);
+      }
+    };
 
-  useEffect(() => {
-    if (messageEndRef.current && messages) {
-      messageEndRef.current.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [messages]);
+    fetchMessagesAndSubscribe();
+
+    // Cleanup function to unsubscribe when the user changes or component unmounts
+    return () => {
+      unsubscribeFromMessages();
+    };
+  }, [selectedUser?._id, getMessages, subscribeToMessages, unsubscribeFromMessages]); // Re-run only when selectedUser changes
 
   if (isMessagesLoading) {
     return (
@@ -55,7 +63,7 @@ const ChatContainer = () => {
             className={`chat ${message.senderId === authUser._id ? "chat-end" : "chat-start"}`}
             ref={messageEndRef}
           >
-            <div className=" chat-image avatar">
+            <div className="chat-image avatar">
               <div className="size-10 rounded-full border">
                 <img
                   src={
@@ -85,9 +93,9 @@ const ChatContainer = () => {
           </div>
         ))}
       </div>
-<h1>hello</h1>
       <MessageInput />
     </div>
   );
 };
+
 export default ChatContainer;

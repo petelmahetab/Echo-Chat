@@ -13,17 +13,17 @@ const Sidebar = () => {
 
   console.log("Users:", users);
   console.log("Online Users:", onlineUsers);
-  
+
   useEffect(() => {
     getUsers();
   }, [getUsers]);
 
   const filteredUsers = showOnlineOnly
-  ? users.filter(user => 
-      onlineUsers.includes(user._id) && 
+    ? users.filter(user =>
+      onlineUsers.includes(user._id) &&
       user._id !== authUser._id
     )
-  : users.filter(user => user._id !== authUser._id);
+    : users.filter(user => user._id !== authUser._id);
 
   if (isUsersLoading) return <SidebarSkeleton />;
 
@@ -45,20 +45,29 @@ const Sidebar = () => {
             />
             <span className="text-sm">Show online only </span>
           </label>
-          <span className="text-xs text-zinc-500"> ({filteredUsers.length} online)</span>
+          <span className="text-xs text-zinc-500"> ({filteredUsers.length} Offline)</span>
         </div>
       </div>
 
       <div className="overflow-y-auto w-full py-3">
         {filteredUsers.map((user) => (
+        
           <button
             key={user._id}
-            onClick={() => setSelectedUser(user)}
+            onClick={() => {
+              if (user) {
+                useChatStore.setState({ messages: [] });
+                setSelectedUser(user);
+                useChatStore.getState().unsubscribeFromMessages();
+                useChatStore.getState().subscribeToMessages();
+              }
+            }}
+                        
             className={`
-              w-full p-3 flex items-center gap-3
-              hover:bg-base-300 transition-colors
-              ${selectedUser?._id === user._id ? "bg-base-300 ring-1 ring-base-300" : ""}
-            `}
+    w-full p-3 flex items-center gap-3
+    hover:bg-base-300 transition-colors
+    ${selectedUser?._id === user._id ? "bg-base-300 ring-1 ring-base-300" : ""}
+  `}
           >
             <div className="relative mx-auto lg:mx-0">
               <img
