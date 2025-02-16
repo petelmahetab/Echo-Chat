@@ -47,7 +47,7 @@ io.on("connection", (socket) => {
     console.log("Received message:", message);
     io.emit("message", message); // Broadcast the message to all clients
   });
-  socket.on("disconnect", () => {
+  socket.on("disconnect", () => {     
     console.log("A user disconnected:", socket.id);
   });
 });

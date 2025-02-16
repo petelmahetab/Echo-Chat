@@ -24,7 +24,7 @@ const protectRoute = async (req, res, next) => {
     
  
     req.user = user;
-    console.log("Authenticated User ID:", req.user._id);
+    //console.log("Authenticated User ID:", req.user._id);
     next();
   } catch (err) {
     console.error("Server error in protectRoute:", err);

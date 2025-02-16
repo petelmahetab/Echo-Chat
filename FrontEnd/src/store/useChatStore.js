@@ -10,6 +10,7 @@ export const useChatStore = create((set, get) => ({
   isUsersLoading: false,
   isMessagesLoading: false,
   socket: null,
+  
 
   getUsers: async () => {
     set({ isUsersLoading: true });
@@ -64,34 +65,45 @@ export const useChatStore = create((set, get) => ({
   },
 
   subscribeToMessages: () => {
-  const { selectedUser } = get();
-  if (!selectedUser) return;
-
-  const socket = useAuthStore.getState().socket;
-
-  // Ensure socket is initialized before subscribing
-  if (!socket) {
-    console.error("Socket not initialized");
-    return;
-  }
-    // socket.on("newMessage", (newMessage) => {
-    //   const isMessageSentFromSelectedUser = newMessage.senderId === selectedUser._id;
-    //   if (!isMessageSentFromSelectedUser) return;
-
-    //   set({
-    //     messages: [...get().messages, newMessage],
-    //   });
-    // });
+    const { selectedUser, socket } = get();
+    if (!selectedUser || !socket) {
+      console.error(selectedUser ? "Socket not initialized" : "No user selected");
+      return;
+    }
+  
+    // Message handler with proper validation
+    const handleNewMessage = (newMessage) => {
+      
+      if (!newMessage?.senderId || !newMessage?.content) {
+        console.warn("Received invalid message format:", newMessage);
+        return;
+      }
+  
+      // Filter messages for currently selected user
+      if (newMessage.senderId === selectedUser._id) {
+        set((state) => ({
+          messages: [...state.messages, newMessage],
+        
+        }));
+      }
+    };
+  
+ 
+    socket.on("newMessage", handleNewMessage);
+    
+ 
+    return () => {
+      socket.off("newMessage", handleNewMessage);
+    };
   },
 
   unsubscribeFromMessages: () => {
-    const socket = useAuthStore.getState().socket;
+    const { socket } = get()
     if (!socket) {
       console.error("Socket not initialized");
       return;
     }
-  
-    //socket.off("newMessage");
+    socket.off("newMessage");
   },
 
   setSelectedUser: (user) => {

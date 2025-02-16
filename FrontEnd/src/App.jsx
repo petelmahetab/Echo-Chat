@@ -11,21 +11,29 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuthStore } from "./store/useAuthStore";
 import { useThemeStore } from "./store/useThemeStore";
 import { useEffect } from "react";
+import { useChatStore } from "./store/useChatStore";
+
 
 import { Loader } from "lucide-react";
 import { Toaster } from "react-hot-toast";
 
 const App = () => {
   const { authUser, checkAuth, isCheckingAuth, onlineUsers } = useAuthStore();
+  const { getUsers } = useChatStore();
+  
   const { theme } = useThemeStore();
 
-  console.log({ onlineUsers });
+  // console.log({ onlineUsers });
 
   useEffect(() => {
-    checkAuth();
+    checkAuth(); // Ensure the user is authenticated before fetching users
   }, [checkAuth]);
 
-  console.log({ authUser });
+  useEffect(() => {
+    if (authUser) {
+      getUsers();
+    }
+  }, [authUser, getUsers]);
 
   if (isCheckingAuth && !authUser)
     return (
