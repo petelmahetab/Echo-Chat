@@ -6,8 +6,10 @@ import ChatContainer from "../components/ChatContainer";
 import MessageSkeleton from "../components/skeletons/MessageSkeleton";
 
 const HomePage = () => {
-  const { selectedUser,isMessagesLoading } = useChatStore();
-  console.log("From home Page", selectedUser); 
+  
+  const { selectedUser, isMessagesLoading } = useChatStore();
+  console.log("From home Page", selectedUser); // Debugging line
+
   return (
     <div className="h-screen bg-base-200">
       <div className="flex items-center justify-center pt-20 px-4">

@@ -33,24 +33,24 @@ app.use(cors({
 const http = createServer(app);
 const io = new Server(http, {
   cors: {
-    origin: "http://localhost:5173",
+    origin: "http://localhost:5173", 
     methods: ["GET", "POST"],
     credentials: true,
   },
-  path: "/socket.io/"
 });
 
-// Socket events handling
 io.on("connection", (socket) => {
   console.log("A user connected:", socket.id);
   socket.on("sendMessage", (message) => {
     console.log("Received message:", message);
     io.emit("message", message); // Broadcast the message to all clients
   });
-  socket.on("disconnect", () => {     
+
+  socket.on("disconnect", () => {
     console.log("A user disconnected:", socket.id);
   });
 });
+
 
 // Use routes
 app.use('/api/auth', authRoutes);

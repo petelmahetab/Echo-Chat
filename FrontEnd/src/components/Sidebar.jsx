@@ -5,13 +5,20 @@ import SidebarSkeleton from "./skeletons/SidebarSkeleton";
 import { Users } from "lucide-react";
 
 const Sidebar = () => {
-  const { getUsers, users, selectedUser, setSelectedUser, isUsersLoading } = useChatStore();
+  const { getUsers, users, selectedUser, setSelectedUser, isUsersLoading ,initializeSocket} = useChatStore();
 
   const { onlineUsers } = useAuthStore();
   const [showOnlineOnly, setShowOnlineOnly] = useState(false);
 
+  const handleUserClick = (user) => {
+    setSelectedUser(user);
+    console.log("Selected User:", user);
+  };
+  
   useEffect(() => {
-    getUsers();
+    const userId = "67ac86904dd24d8ebddbf460"; // Replace with the actual user ID
+  initializeSocket(userId);
+  getUsers();
   }, [getUsers]);
 
   const filteredUsers = showOnlineOnly
@@ -46,7 +53,7 @@ const Sidebar = () => {
         {filteredUsers.map((user) => (
           <button
             key={user._id}
-            onClick={() => setSelectedUser(user)}
+            onClick={() => handleUserClick(user)}
             className={`
               w-full p-3 flex items-center gap-3
               hover:bg-base-300 transition-colors
