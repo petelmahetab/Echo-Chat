@@ -39,6 +39,7 @@ const io = new Server(http, {
   },
 });
 
+
 io.on("connection", (socket) => {
   console.log("A user connected:", socket.id);
   socket.on("sendMessage", (message) => {
