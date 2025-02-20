@@ -109,9 +109,11 @@ export const logOutUser = (req, res) => {
 
   } catch (error) {
     console.log("Error during log out:", error.message);
-    res.status(500).json({ error: "Internal Server Error." });
+    res.status(500).json({ error: "Internal Server Error..." });
   }
 };
+
+
 
 
 export const updateUserProfile = async (req, res) => {

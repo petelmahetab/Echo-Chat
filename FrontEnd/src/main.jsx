@@ -12,3 +12,6 @@ createRoot(document.getElementById("root")).render(
     </BrowserRouter>
 
 );
+
+
+// Why my app is going to break
